@@ -1,0 +1,1 @@
+import{C as r}from"./index-C-b8wNME.js";function o(e){return r.get("/drones",{params:e})}function s(e){return r.get(`/drones/${e}`)}function u(e){return r.post("/drones",e)}function a(e,n){return r.put(`/drones/${e}`,n)}function d(e){return r.delete(`/drones/${e}`)}function c(e){return r.put(`/drones/${e}/release`)}export{s as a,u as c,d,o as g,c as r,a as u};

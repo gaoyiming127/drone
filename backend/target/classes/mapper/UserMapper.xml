@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.drone.mapper.UserMapper">
+
+    <!--
+      按用户名精确查询用户。
+      【待人工确认】com.drone.mapper.UserMapper 接口中没有本语句对应的同名方法，
+      现有代码使用 MyBatis-Plus 的 LambdaQueryWrapper 实现同样的查询，故该语句当前不可达；
+      因无法确认是否存在通过 SqlSession 指定语句ID 调用等外部依赖，暂予保留，请人工确认后再决定是否删除。
+    -->
+    <select id="selectByUsername" resultType="com.drone.entity.User">
+        SELECT * FROM sys_user WHERE username = #{username}
+    </select>
+
+</mapper>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.drone.mapper.MaintenanceRecordMapper">
+
+    <resultMap id="MaintenanceRecordVOMap" type="com.drone.vo.MaintenanceRecordVO">
+        <!-- 工单本体字段 -->
+        <id column="id" property="id"/>
+        <result column="maintenance_code" property="maintenanceCode"/>
+        <result column="device_type" property="deviceType"/>
+        <result column="device_id" property="deviceId"/>
+        <result column="device_code" property="deviceCode"/>
+        <result column="device_name" property="deviceName"/>
+        <result column="fault_description" property="faultDescription"/>
+        <result column="maintenance_content" property="maintenanceContent"/>
+        <result column="maintenance_date" property="maintenanceDate"/>
+        <result column="maintenance_cost" property="maintenanceCost"/>
+        <result column="status" property="status"/>
+        <result column="result" property="result"/>
+        <result column="remark" property="remark"/>
+        <result column="created_by" property="createdBy"/>
+        <!-- 关联查询补充的字段：设备编号/名称（按设备类型取值）与创建人姓名 -->
+        <result column="created_by_name" property="createdByName"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <sql id="maintenanceRecordColumns">
+        mr.*,
+        CASE
+            WHEN mr.device_type = 'DRONE' THEN (SELECT drone_code FROM drone WHERE id = mr.device_id)
+            WHEN mr.device_type = 'BATTERY' THEN (SELECT battery_code FROM battery WHERE id = mr.device_id)
+            END AS device_code,
+        CASE
+            WHEN mr.device_type = 'DRONE' THEN (SELECT drone_name FROM drone WHERE id = mr.device_id)
+            WHEN mr.device_type = 'BATTERY' THEN (SELECT battery_name FROM battery WHERE id = mr.device_id)
+            END AS device_name,
+        u.real_name AS created_by_name
+    </sql>
+
+    <sql id="maintenanceRecordJoins">
+        FROM maintenance_record mr
+        LEFT JOIN sys_user u ON mr.created_by = u.id
+    </sql>
+
+    <sql id="maintenanceRecordConditions">
+        <where>
+            <if test="deviceType != null and deviceType != ''">
+                AND mr.device_type = #{deviceType}
+            </if>
+            <if test="status != null and status != ''">
+                AND mr.status = #{status}
+            </if>
+        </where>
+    </sql>
+
+    <!--
+      查询全部维修记录（不分页、无过滤条件）。
+      【待人工确认】接口方法 selectMaintenanceRecordVOs() 在本项目内未被调用，
+      列表查询已统一改为 selectMaintenanceRecordVOsByPage，故该语句当前不可达；
+      因无法确认是否存在外部调用，暂予保留，请人工确认后再决定是否删除。
+    -->
+    <select id="selectMaintenanceRecordVOs" resultMap="MaintenanceRecordVOMap">
+        SELECT
+        <include refid="maintenanceRecordColumns"/>
+        <include refid="maintenanceRecordJoins"/>
+        ORDER BY mr.created_at DESC
+    </select>
+
+    <select id="selectRecentMaintenanceRecordVOs" resultMap="MaintenanceRecordVOMap">
+        SELECT
+        <include refid="maintenanceRecordColumns"/>
+        <include refid="maintenanceRecordJoins"/>
+        ORDER BY mr.created_at DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 按条件分页查询：条件与总数统计共用 maintenanceRecordConditions，两者条件必须保持一致 -->
+    <select id="selectMaintenanceRecordVOsByPage" resultMap="MaintenanceRecordVOMap">
+        SELECT
+        <include refid="maintenanceRecordColumns"/>
+        <include refid="maintenanceRecordJoins"/>
+        <include refid="maintenanceRecordConditions"/>
+        ORDER BY mr.created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countMaintenanceRecordVOs" resultType="long">
+        SELECT COUNT(*)
+        <include refid="maintenanceRecordJoins"/>
+        <include refid="maintenanceRecordConditions"/>
+    </select>
+
+</mapper>

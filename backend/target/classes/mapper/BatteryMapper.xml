@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.drone.mapper.BatteryMapper">
+
+    <!--
+      按条件查询电池列表。
+      【待人工确认】com.drone.mapper.BatteryMapper 接口中没有本语句对应的同名方法，
+      现有列表查询使用 MyBatis-Plus 的分页构造器实现，故该语句当前不可达；
+      因无法确认是否存在通过 SqlSession 指定语句ID 调用等外部依赖，暂予保留，请人工确认后再决定是否删除。
+    -->
+    <select id="selectBatteriesByCondition" resultType="com.drone.entity.Battery">
+        SELECT * FROM battery
+        <where>
+            <if test="batteryCode != null and batteryCode != ''">
+                AND battery_code LIKE CONCAT('%', #{batteryCode}, '%')
+            </if>
+            <if test="model != null and model != ''">
+                AND model LIKE CONCAT('%', #{model}, '%')
+            </if>
+            <if test="healthLevel != null and healthLevel != ''">
+                AND health_level = #{healthLevel}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY created_at DESC
+    </select>
+
+</mapper>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.drone.mapper.DroneMapper">
+
+    <!--
+      按条件查询无人机列表。
+      【待人工确认】com.drone.mapper.DroneMapper 接口中没有本语句对应的同名方法，
+      现有列表查询使用 MyBatis-Plus 的分页构造器实现，故该语句当前不可达；
+      因无法确认是否存在通过 SqlSession 指定语句ID 调用等外部依赖，暂予保留，请人工确认后再决定是否删除。
+    -->
+    <select id="selectDronesByCondition" resultType="com.drone.entity.Drone">
+        SELECT * FROM drone
+        <where>
+            <if test="droneCode != null and droneCode != ''">
+                AND drone_code LIKE CONCAT('%', #{droneCode}, '%')
+            </if>
+            <if test="droneName != null and droneName != ''">
+                AND drone_name LIKE CONCAT('%', #{droneName}, '%')
+            </if>
+            <if test="brand != null and brand != ''">
+                AND brand LIKE CONCAT('%', #{brand}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY created_at DESC
+    </select>
+
+</mapper>

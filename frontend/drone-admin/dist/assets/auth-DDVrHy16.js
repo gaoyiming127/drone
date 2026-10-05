@@ -1,0 +1,1 @@
+import{C as r}from"./index-C-b8wNME.js";function u(t){return r.post("/auth/login",t)}function o(t){return r.post("/auth/register",t)}function e(t){return r.put("/auth/password",t)}export{u as l,o as r,e as u};

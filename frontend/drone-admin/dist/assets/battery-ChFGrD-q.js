@@ -1,0 +1,1 @@
+import{C as e}from"./index-C-b8wNME.js";function n(t){return e.get("/batteries",{params:t})}function s(t){return e.get(`/batteries/${t}`)}function u(t){return e.post("/batteries",t)}function i(t,r){return e.put(`/batteries/${t}`,r)}function o(t){return e.delete(`/batteries/${t}`)}export{s as a,u as c,o as d,n as g,i as u};

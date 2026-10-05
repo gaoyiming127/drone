@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.drone.mapper.FlightRecordMapper">
+
+    <resultMap id="FlightRecordVOMap" type="com.drone.vo.FlightRecordVO">
+        <!-- 记录本体字段 -->
+        <id column="id" property="id"/>
+        <result column="record_code" property="recordCode"/>
+        <result column="drone_id" property="droneId"/>
+        <result column="drone_code" property="droneCode"/>
+        <result column="drone_name" property="droneName"/>
+        <result column="user_id" property="userId"/>
+        <result column="username" property="userName"/>
+        <result column="real_name" property="userRealName"/>
+        <result column="flight_location" property="flightLocation"/>
+        <result column="flight_date" property="flightDate"/>
+        <result column="flight_minutes" property="flightMinutes"/>
+        <result column="takeoff_count" property="takeoffCount"/>
+        <result column="has_exception" property="hasException"/>
+        <result column="exception_description" property="exceptionDescription"/>
+        <result column="remark" property="remark"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <sql id="flightRecordColumns">
+        fr.*,
+        d.drone_code,
+        d.drone_name,
+        u.username,
+        u.real_name
+    </sql>
+
+    <sql id="flightRecordJoins">
+        FROM flight_record fr
+        LEFT JOIN drone d ON fr.drone_id = d.id
+        LEFT JOIN sys_user u ON fr.user_id = u.id
+    </sql>
+
+    <!-- 无人机编号、使用人员为模糊匹配；日期优先用区间条件以便命中 idx_flight_date，未识别的输入退化为模糊匹配 -->
+    <sql id="flightRecordConditions">
+        <where>
+            <if test="droneCode != null and droneCode != ''">
+                AND d.drone_code LIKE CONCAT('%', #{droneCode}, '%')
+            </if>
+            <if test="userName != null and userName != ''">
+                AND (u.username LIKE CONCAT('%', #{userName}, '%') OR u.real_name LIKE CONCAT('%', #{userName}, '%'))
+            </if>
+            <if test="startDate != null">
+                AND fr.flight_date &gt;= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND fr.flight_date &lt;= #{endDate}
+            </if>
+            <if test="dateLike != null and dateLike != ''">
+                AND DATE_FORMAT(fr.flight_date, '%Y-%m-%d') LIKE CONCAT('%', #{dateLike}, '%')
+            </if>
+            <!-- 普通用户只能看到本人登记的记录，管理员不限制 -->
+            <if test="onlyUserId != null">
+                AND fr.user_id = #{onlyUserId}
+            </if>
+        </where>
+    </sql>
+
+    <!--
+      查询全部飞行记录（不分页、无过滤条件）。
+      【待人工确认】接口方法 selectFlightRecordVOs() 在本项目内未被调用，
+      列表查询已统一改为 selectFlightRecordVOsByPage，故该语句当前不可达；
+      因无法确认是否存在外部调用，暂予保留，请人工确认后再决定是否删除。
+    -->
+    <select id="selectFlightRecordVOs" resultMap="FlightRecordVOMap">
+        SELECT
+        <include refid="flightRecordColumns"/>
+        <include refid="flightRecordJoins"/>
+        ORDER BY fr.created_at DESC
+    </select>
+
+    <!-- 按条件分页查询：条件与总数统计共用 flightRecordConditions，两者条件必须保持一致 -->
+    <select id="selectFlightRecordVOsByPage" resultMap="FlightRecordVOMap">
+        SELECT
+        <include refid="flightRecordColumns"/>
+        <include refid="flightRecordJoins"/>
+        <include refid="flightRecordConditions"/>
+        ORDER BY fr.created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countFlightRecordVOs" resultType="long">
+        SELECT COUNT(*)
+        <include refid="flightRecordJoins"/>
+        <include refid="flightRecordConditions"/>
+    </select>
+
+    <!-- 首页看板：按登记时间取最近若干条，普通用户可通过 onlyUserId 限定本人记录 -->
+    <select id="selectRecentFlightRecordVOs" resultMap="FlightRecordVOMap">
+        SELECT
+        <include refid="flightRecordColumns"/>
+        <include refid="flightRecordJoins"/>
+        <if test="onlyUserId != null">
+            WHERE fr.user_id = #{onlyUserId}
+        </if>
+        ORDER BY fr.created_at DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>
